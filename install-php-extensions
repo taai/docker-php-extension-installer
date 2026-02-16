@@ -3301,12 +3301,17 @@ installRemoteModule() {
 					installRemoteModule_version=1.1.0
 				fi
 			fi
+			installRemoteModule_version="$(resolvePeclStabilityVersion "$installRemoteModule_module" "$installRemoteModule_version")"
 			if ! test -e /usr/local/lib/libcmark.so && ! test -e /usr/local/lib64/libcmark.so && ! test -e /usr/lib/libcmark.so && ! test -e /usr/lib64/libcmark.so && ! test -e /lib/libcmark.so; then
-				if test $(compareVersions "$(cmake --version | head -n1 | sed -E 's/^.* //')" '3.7') -lt 0; then
+				installRemoteModule_cmarkVersion="$(cmake --version | head -n1 | sed -E 's/^.* //')"
+				if test $(compareVersions "$installRemoteModule_cmarkVersion" '3.7') -lt 0; then
 					installRemoteModule_tmp=0.29.0
-				else
+				elif test $(compareVersions "$installRemoteModule_cmarkVersion" '3.14') -lt 0 || { test -n "$installRemoteModule_version" && test $(compareVersions "$installRemoteModule_version" '1.1.0') -le 0; }; then
 					installRemoteModule_tmp=0.31.1
+				else
+					installRemoteModule_tmp=0.31.2
 				fi
+				printf 'Installing libcmark %s\n' "$installRemoteModule_tmp"
 				cd "$(getPackageSource https://github.com/commonmark/cmark/archive/$installRemoteModule_tmp.tar.gz)"
 				make -s -j$(getProcessorCount) cmake_build
 				make -s -j$(getProcessorCount) install
